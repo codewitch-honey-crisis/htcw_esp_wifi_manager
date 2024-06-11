@@ -81,6 +81,7 @@ void wifi_manager::event_handler(void* arg, esp_event_base_t event_base,
 wifi_manager_state wifi_manager::state() const {
     switch(m_state) {
         case 0:
+        case 1:
             return wifi_manager_state::disconnected;
         default:
             break;
@@ -121,30 +122,31 @@ void wifi_manager::connect(const char* ssid, const char* pass) {
                                                             &instance_got_ip));
         m_state = 1;
     }
-    wifi_config_t wifi_config;
-    memset(&wifi_config,0,sizeof(wifi_config));
-    memcpy(wifi_config.sta.ssid,ssid,strlen(ssid)+1);
-    memcpy(wifi_config.sta.password,pass,strlen(pass)+1);
-    wifi_config.sta.threshold.authmode = WIFI_AUTH_WPA_WPA2_PSK;
-    wifi_config.sta.sae_pwe_h2e = wifi_sae_pwe_method_t::WPA3_SAE_PWE_BOTH;
-    wifi_config.sta.sae_h2e_identifier[0]=0;
-    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA) );
-    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config) );
-    m_state = 1;
-    ESP_ERROR_CHECK(esp_wifi_start() );
-
+    if(m_state<2) {
+        wifi_config_t wifi_config;
+        memset(&wifi_config,0,sizeof(wifi_config));
+        memcpy(wifi_config.sta.ssid,ssid,strlen(ssid)+1);
+        memcpy(wifi_config.sta.password,pass,strlen(pass)+1);
+        wifi_config.sta.threshold.authmode = WIFI_AUTH_WPA_WPA2_PSK;
+        wifi_config.sta.sae_pwe_h2e = wifi_sae_pwe_method_t::WPA3_SAE_PWE_BOTH;
+        wifi_config.sta.sae_h2e_identifier[0]=0;
+        ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA) );
+        ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config) );
+        ESP_ERROR_CHECK(esp_wifi_start() );
+        m_state = 2;
+    }
 }
 
 void wifi_manager::disconnect(bool radio_off) {
-    if(m_state>0)  {
+    if(m_state>1)  {
         //puts("Disconnecting");
         esp_wifi_disconnect();
         if(radio_off) {
             esp_wifi_stop();
         }
         xEventGroupClearBits(m_wifi_event_group,WIFI_CONNECTED_BIT | WIFI_FAIL_BIT);
+        m_state = 1;
     }
-    m_state = 0;
 }
 
 #endif
