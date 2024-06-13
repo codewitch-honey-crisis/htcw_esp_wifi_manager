@@ -51,14 +51,19 @@ wifi_manager_state wifi_manager::state() const {
     }
 }
 void wifi_manager::connect(const char* ssid, const char* pass) {
+    if(m_state==1) {
+        disconnect();
+    }
     WiFi.mode(WIFI_STA);
     WiFi.disconnect();
     WiFi.begin(ssid,pass);
     m_state = 1;
 }
 void wifi_manager::disconnect(bool radio_off) {
-    WiFi.disconnect(radio_off,false);
-    m_state = 0;
+    if(m_state==1) {
+        WiFi.disconnect(radio_off,false);
+        m_state = 0;
+    }
 }
 #else
 wifi_manager::wifi_manager() : m_wifi_event_group(nullptr),m_retry_count(0),m_state(0) {
