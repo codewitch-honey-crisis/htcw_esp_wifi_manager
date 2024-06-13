@@ -25,24 +25,29 @@ wifi_manager::wifi_manager() : m_state(0) {
 
 }
 wifi_manager_state wifi_manager::state() const {
-    switch(WiFi.status()) {
-        case WL_CONNECTED:
-            return wifi_manager_state::connected;
-        case WL_DISCONNECTED:
-            if(m_state==1) {
+    if(m_state==0) {
+        return wifi_manager_state::disconnected;
+    } else {
+        switch(WiFi.status()) {
+            
+            case WL_CONNECTED:
+                return wifi_manager_state::connected;
+            case WL_DISCONNECTED:
+                if(m_state==1) {
+                    return wifi_manager_state::connecting;
+                }
+                return wifi_manager_state::disconnected;
+            case WL_CONNECTION_LOST:
+            case WL_SCAN_COMPLETED:
+                return wifi_manager_state::disconnected;
+            case WL_CONNECT_FAILED:
+            case WL_NO_SHIELD:
+            case WL_NO_SSID_AVAIL:
+                //printf("WiFi Error: %d",(int)WiFi.status());
+                return wifi_manager_state::error;
+            case WL_IDLE_STATUS:
                 return wifi_manager_state::connecting;
-            }
-            return wifi_manager_state::disconnected;
-        case WL_CONNECTION_LOST:
-        case WL_SCAN_COMPLETED:
-            return wifi_manager_state::disconnected;
-        case WL_CONNECT_FAILED:
-        case WL_NO_SHIELD:
-        case WL_NO_SSID_AVAIL:
-            //printf("WiFi Error: %d",(int)WiFi.status());
-            return wifi_manager_state::error;
-        default:
-            return wifi_manager_state::connecting;
+        }
     }
 }
 void wifi_manager::connect(const char* ssid, const char* pass) {

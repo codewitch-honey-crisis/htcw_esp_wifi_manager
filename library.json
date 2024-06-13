@@ -1,6 +1,6 @@
 {
     "name": "htcw_esp_wifi_manager",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "description": "Provides cross platform access to the ESP32 WiFi system",
     "keywords": ["wifi", "esp32"],
     "authors": {
